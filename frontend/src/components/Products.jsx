@@ -1,67 +1,159 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 export default function Products() {
-  const [products, setProducts] = useState([
-    { id: 1, name: "Veg Sandwich", desc: "Fresh and tasty sandwich", price: 50, quantity: 10 },
-    { id: 2, name: "Coffee", desc: "Hot brewed coffee", price: 20, quantity: 15 },
-    { id: 3, name: "Burger", desc: "Cheesy chicken burger", price: 80, quantity: 8 },
-  ]);
-
+  const [products, setProducts] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [newProduct, setNewProduct] = useState({
     name: "",
-    desc: "",
+    description: "",
     price: "",
     quantity: "",
   });
+  const [editProduct, setEditProduct] = useState(null);
 
-  // Handle input changes
-  const handleChange = (e) => {
-    setNewProduct({ ...newProduct, [e.target.name]: e.target.value });
+  // ✅ Fetch products from backend
+  const fetchProducts = async () => {
+    try {
+      const res = await fetch("http://localhost:8080/products", {
+        method: "GET",
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to fetch products");
+      const data = await res.json();
+      setProducts(data);
+    } catch (err) {
+      console.error("Error fetching products:", err);
+    }
   };
 
-  // Add product
-  const handleAddProduct = () => {
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  // Handle input changes
+  const handleChange = (e, isEdit = false) => {
+    if (isEdit) {
+      setEditProduct({ ...editProduct, [e.target.name]: e.target.value });
+    } else {
+      setNewProduct({ ...newProduct, [e.target.name]: e.target.value });
+    }
+  };
+
+  // ✅ Add product
+  const handleAddProduct = async () => {
     if (!newProduct.name || !newProduct.price || !newProduct.quantity) {
       alert("Please fill required fields");
       return;
     }
-    const newItem = {
-      id: products.length + 1,
-      ...newProduct,
-      price: parseFloat(newProduct.price),
-      quantity: parseInt(newProduct.quantity),
-    };
-    setProducts([...products, newItem]);
-    setNewProduct({ name: "", desc: "", price: "", quantity: "" });
-    setIsModalOpen(false);
+
+    try {
+      const res = await fetch("http://localhost:8080/products", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          name: newProduct.name,
+          description: newProduct.description,
+          price: parseFloat(newProduct.price),
+          quantity: parseInt(newProduct.quantity),
+        }),
+      });
+
+      if (!res.ok) throw new Error("Failed to add product");
+
+      await fetchProducts();
+      setNewProduct({ name: "", description: "", price: "", quantity: "" });
+      setIsModalOpen(false);
+    } catch (error) {
+      console.error(error);
+      alert("Error adding product");
+    }
   };
 
-  // Delete product
-  const handleDelete = (id) => {
-    setProducts(products.filter((p) => p.id !== id));
+  // ✅ Delete product
+  const handleDelete = async (id) => {
+    try {
+      const res = await fetch(`http://localhost:8080/products/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+
+      if (!res.ok) throw new Error("Failed to delete product");
+      setProducts(products.filter((p) => p.id !== id));
+    } catch (error) {
+      console.error(error);
+      alert("Error deleting product");
+    }
   };
 
-  // Increase quantity
-  const handleIncreaseQty = (id) => {
-    setProducts(
-      products.map((p) =>
-        p.id === id ? { ...p, quantity: p.quantity + 1 } : p
-      )
-    );
+  // ✅ Increase quantity
+  const handleIncreaseQty = async (product) => {
+    try {
+      const res = await fetch(`http://localhost:8080/products/${product.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          ...product,
+          quantity: product.quantity + 1,
+        }),
+      });
+
+      if (!res.ok) throw new Error("Failed to update quantity");
+      await fetchProducts();
+    } catch (error) {
+      console.error(error);
+      alert("Error updating quantity");
+    }
   };
 
-  // Edit product (basic inline alert for now)
-  const handleEdit = (id) => {
-    const prod = products.find((p) => p.id === id);
-    alert(`Edit Product: ${prod.name}\n(You can replace with edit modal)`);
+  // ✅ Open Edit Modal
+  const handleEdit = (product) => {
+    setEditProduct(product);
+    setIsEditModalOpen(true);
+  };
+
+  // ✅ Save Edited Product
+  const handleUpdateProduct = async () => {
+    if (!editProduct.name || !editProduct.price || !editProduct.quantity) {
+      alert("Please fill required fields");
+      return;
+    }
+
+    try {
+      const res = await fetch(
+        `http://localhost:8080/products/${editProduct.id}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            name: editProduct.name,
+            description: editProduct.description,
+            price: parseFloat(editProduct.price),
+            quantity: parseInt(editProduct.quantity),
+          }),
+        }
+      );
+
+      if (!res.ok) throw new Error("Failed to update product");
+      await fetchProducts();
+      setIsEditModalOpen(false);
+      setEditProduct(null);
+    } catch (error) {
+      console.error(error);
+      alert("Error updating product");
+    }
   };
 
   return (
     <div>
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-indigo-700">Manage Products 🛠️</h2>
+        <h2 className="text-2xl font-bold text-indigo-700">
+          Manage Products 🛠️
+        </h2>
         <button
           onClick={() => setIsModalOpen(true)}
           className="px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:opacity-90 transition"
@@ -78,21 +170,23 @@ export default function Products() {
             className="flex justify-between items-center p-4 bg-gradient-to-r from-indigo-100 to-purple-100 rounded-xl shadow-md"
           >
             <div>
-              <h3 className="text-lg font-semibold text-gray-800">{product.name}</h3>
-              <p className="text-sm text-gray-600">{product.desc}</p>
+              <h3 className="text-lg font-semibold text-gray-800">
+                {product.name}
+              </h3>
+              <p className="text-sm text-gray-600">{product.description}</p>
               <p className="text-indigo-700 font-bold">
                 ₹ {product.price} | Qty: {product.quantity}
               </p>
             </div>
             <div className="flex gap-2">
               <button
-                onClick={() => handleIncreaseQty(product.id)}
+                onClick={() => handleIncreaseQty(product)}
                 className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
               >
                 + Qty
               </button>
               <button
-                onClick={() => handleEdit(product.id)}
+                onClick={() => handleEdit(product)}
                 className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600"
               >
                 Edit
@@ -108,7 +202,7 @@ export default function Products() {
         ))}
       </div>
 
-      {/* Modal */}
+      {/* Add Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center bg-white/30 backdrop-blur-sm">
           <div className="bg-white w-96 p-6 rounded-xl shadow-lg">
@@ -123,8 +217,8 @@ export default function Products() {
                 className="w-full px-3 py-2 border rounded"
               />
               <textarea
-                name="desc"
-                value={newProduct.desc}
+                name="description"
+                value={newProduct.description}
                 onChange={handleChange}
                 placeholder="Description"
                 className="w-full px-3 py-2 border rounded"
@@ -158,6 +252,62 @@ export default function Products() {
                 className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
               >
                 Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {isEditModalOpen && editProduct && (
+        <div className="fixed inset-0 flex items-center justify-center bg-white/30 backdrop-blur-sm">
+          <div className="bg-white w-96 p-6 rounded-xl shadow-lg">
+            <h3 className="text-xl font-semibold mb-4">Edit Product</h3>
+            <div className="space-y-3">
+              <input
+                type="text"
+                name="name"
+                value={editProduct.name}
+                onChange={(e) => handleChange(e, true)}
+                placeholder="Product Name"
+                className="w-full px-3 py-2 border rounded"
+              />
+              <textarea
+                name="description"
+                value={editProduct.description}
+                onChange={(e) => handleChange(e, true)}
+                placeholder="Description"
+                className="w-full px-3 py-2 border rounded"
+              />
+              <input
+                type="number"
+                name="price"
+                value={editProduct.price}
+                onChange={(e) => handleChange(e, true)}
+                placeholder="Price"
+                className="w-full px-3 py-2 border rounded"
+              />
+              <input
+                type="number"
+                name="quantity"
+                value={editProduct.quantity}
+                onChange={(e) => handleChange(e, true)}
+                placeholder="Quantity"
+                className="w-full px-3 py-2 border rounded"
+              />
+            </div>
+            <div className="flex justify-end gap-2 mt-4">
+              <button
+                onClick={() => setIsEditModalOpen(false)}
+                className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleUpdateProduct}
+                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+              >
+                Update
               </button>
             </div>
           </div>

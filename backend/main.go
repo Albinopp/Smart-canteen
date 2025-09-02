@@ -33,6 +33,9 @@ func main() {
 	r.POST("/login", controllers.Login)
 
 	r.POST("/products", middlewares.AuthMiddleware(), controllers.AddProduct)
+	r.GET("/products", middlewares.AuthMiddleware(), controllers.GetProducts)
+	r.PUT("/products", middlewares.AuthMiddleware(), controllers.EditProduct)
+	r.DELETE("/products", middlewares.AuthMiddleware(), controllers.DeleteProduct)
 
 	r.Run(":8080")
 }

@@ -54,3 +54,93 @@ func AddProduct(c *gin.Context) {
 		"id":      result.InsertedID.(primitive.ObjectID).Hex(),
 	})
 }
+
+func GetProducts(c *gin.Context) {
+	role, _ := c.Get("role")
+	if role != "admin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Only admins can add products"})
+		return
+	}
+	collection := mongodb.GetCollection("smartcanteen", "products")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	cursor, err := collection.Find(ctx, bson.M{})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch products"})
+		return
+	}
+	defer cursor.Close(ctx)
+
+	var products []model.Product
+	if err := cursor.All(ctx, &products); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to decode products"})
+		return
+	}
+
+	c.JSON(http.StatusOK, products)
+}
+
+func EditProduct(c *gin.Context) {
+	id := c.Param("id")
+
+	objID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid product ID"})
+		return
+	}
+
+	var input model.Product
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
+		return
+	}
+
+	collection := mongodb.GetCollection("smartcanteen", "products")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	update := bson.M{
+		"$set": bson.M{
+			"name":        input.Name,
+			"description": input.Description,
+			"price":       input.Price,
+			"quantity":    input.Quantity,
+			"updatedAt":   time.Now(),
+		},
+	}
+
+	_, err = collection.UpdateOne(ctx, bson.M{"_id": objID}, update)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update product"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Product updated successfully"})
+}
+
+// ✅ Delete Product
+func DeleteProduct(c *gin.Context) {
+	id := c.Param("id")
+
+	objID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid product ID"})
+		return
+	}
+
+	collection := mongodb.GetCollection("smartcanteen", "products")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	_, err = collection.DeleteOne(ctx, bson.M{"_id": objID})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to delete product"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Product deleted successfully"})
+}
