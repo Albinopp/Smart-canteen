@@ -4,6 +4,7 @@ import (
 	"backend/internal/model"
 	mongodb "backend/internal/mogodb"
 	"context"
+	"log/slog"
 	"net/http"
 	"time"
 
@@ -57,8 +58,8 @@ func AddProduct(c *gin.Context) {
 
 func GetProducts(c *gin.Context) {
 	role, _ := c.Get("role")
-	if role != "admin" {
-		c.JSON(http.StatusForbidden, gin.H{"error": "Only admins can add products"})
+	if role != "admin" && role != "user" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "No persmission to see food products"})
 		return
 	}
 	collection := mongodb.GetCollection("smartcanteen", "products")
@@ -87,12 +88,14 @@ func EditProduct(c *gin.Context) {
 
 	objID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
+		slog.Error("invalid product id")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid product ID"})
 		return
 	}
 
 	var input model.Product
 	if err := c.ShouldBindJSON(&input); err != nil {
+		slog.Error("invalid input")
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
 		return
 	}
@@ -114,6 +117,7 @@ func EditProduct(c *gin.Context) {
 
 	_, err = collection.UpdateOne(ctx, bson.M{"_id": objID}, update)
 	if err != nil {
+		slog.Error("failed to update product")
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update product"})
 		return
 	}

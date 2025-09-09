@@ -11,19 +11,25 @@ export default function Products() {
     quantity: "",
   });
   const [editProduct, setEditProduct] = useState(null);
+  const token = localStorage.getItem("token");
 
   // ✅ Fetch products from backend
   const fetchProducts = async () => {
     try {
       const res = await fetch("http://localhost:8080/products", {
         method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
         credentials: "include",
       });
       if (!res.ok) throw new Error("Failed to fetch products");
       const data = await res.json();
-      setProducts(data);
+      const safeData = Array.isArray(data) ? data : data?.products ?? [];
+      setProducts(safeData);
     } catch (err) {
       console.error("Error fetching products:", err);
+      setProducts([]); 
     }
   };
 
@@ -50,7 +56,10 @@ export default function Products() {
     try {
       const res = await fetch("http://localhost:8080/products", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         credentials: "include",
         body: JSON.stringify({
           name: newProduct.name,
@@ -76,6 +85,9 @@ export default function Products() {
     try {
       const res = await fetch(`http://localhost:8080/products/${id}`, {
         method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
         credentials: "include",
       });
 
@@ -92,7 +104,10 @@ export default function Products() {
     try {
       const res = await fetch(`http://localhost:8080/products/${product.id}`, {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         credentials: "include",
         body: JSON.stringify({
           ...product,
@@ -126,7 +141,10 @@ export default function Products() {
         `http://localhost:8080/products/${editProduct.id}`,
         {
           method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          headers: { 
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
           credentials: "include",
           body: JSON.stringify({
             name: editProduct.name,
@@ -163,8 +181,11 @@ export default function Products() {
       </div>
 
       {/* Products List */}
-      <div className="space-y-4">
-        {products.map((product) => (
+     <div className="space-y-4">
+      {products.length === 0 ? (
+        <p className="text-gray-500">No products available</p>
+      ) : (
+        products.map((product) => (
           <div
             key={product.id}
             className="flex justify-between items-center p-4 bg-gradient-to-r from-indigo-100 to-purple-100 rounded-xl shadow-md"
@@ -199,8 +220,10 @@ export default function Products() {
               </button>
             </div>
           </div>
-        ))}
-      </div>
+        ))
+      )}
+    </div>
+
 
       {/* Add Modal */}
       {isModalOpen && (

@@ -1,6 +1,7 @@
 package middlewares
 
 import (
+	"log/slog"
 	"net/http"
 	"strings"
 
@@ -15,6 +16,7 @@ func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
+			slog.Error("authorization error")
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header required"})
 			c.Abort()
 			return
@@ -30,6 +32,7 @@ func AuthMiddleware() gin.HandlerFunc {
 		})
 
 		if err != nil || !token.Valid {
+			slog.Error("invalid token")
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
 			c.Abort()
 			return
@@ -37,14 +40,23 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		claims, ok := token.Claims.(jwt.MapClaims)
 		if !ok {
+			slog.Error("invalid token claims")
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token claims"})
 			c.Abort()
 			return
 		}
 
-		// Save claims in context
-		c.Set("username", claims["username"])
-		c.Set("role", claims["role"])
+		if userID, exists := claims["user_id"]; exists {
+			if uid, ok := userID.(string); ok {
+				c.Set("user_id", uid)
+			}
+		}
+		if username, exists := claims["username"]; exists {
+			c.Set("username", username)
+		}
+		if role, exists := claims["role"]; exists {
+			c.Set("role", role)
+		}
 
 		c.Next()
 	}

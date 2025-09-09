@@ -55,6 +55,7 @@ export default function Login() {
       // Save JWT + role
       localStorage.setItem("token", data.token);
       localStorage.setItem("role", data.role);
+      localStorage.setItem("user_id", data.user_id);
 
       // Redirect based on role
       if (data.role === "admin") {

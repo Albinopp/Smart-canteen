@@ -34,8 +34,11 @@ func main() {
 
 	r.POST("/products", middlewares.AuthMiddleware(), controllers.AddProduct)
 	r.GET("/products", middlewares.AuthMiddleware(), controllers.GetProducts)
-	r.PUT("/products", middlewares.AuthMiddleware(), controllers.EditProduct)
-	r.DELETE("/products", middlewares.AuthMiddleware(), controllers.DeleteProduct)
+	r.PUT("/products/:id", middlewares.AuthMiddleware(), controllers.EditProduct)
+	r.DELETE("/products/:id", middlewares.AuthMiddleware(), controllers.DeleteProduct)
+
+	r.POST("/addtocart/:id/:user_id", middlewares.AuthMiddleware(), controllers.AddtoCart)
+	r.GET("/user/cart", middlewares.AuthMiddleware(), controllers.GetCart)
 
 	r.Run(":8080")
 }

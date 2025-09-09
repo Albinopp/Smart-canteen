@@ -1,16 +1,8 @@
 // File: Register.jsx
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function Register() {
-
-   useEffect(() => {
-    const token = localStorage.getItem("token");
-
-    if (token) {
-      navigate("/");
-    }
-  }, [navigate]);
 
   const [form, setForm] = useState({
     name: "",
@@ -20,6 +12,15 @@ export default function Register() {
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+
+   useEffect(() => {
+    const token = localStorage.getItem("token");
+
+    if (token) {
+      navigate("/");
+    }
+  }, [navigate]);
 
   const validate = () => {
     const next = {};

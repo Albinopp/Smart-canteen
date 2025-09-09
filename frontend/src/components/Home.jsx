@@ -61,9 +61,9 @@ export default function Home() {
         {/* Navigation */}
         <nav className="flex-1 px-4 py-4 space-y-2">
           <Link
-            to="/user/products"
+            to="/products"
             className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
-              isActive("/user/products")
+              isActive("/products")
                 ? "bg-gradient-to-r from-indigo-100 to-purple-100 text-indigo-700 border-l-4 border-indigo-600"
                 : "text-gray-600 hover:bg-indigo-50 hover:text-indigo-700"
             }`}
@@ -72,9 +72,20 @@ export default function Home() {
           </Link>
 
           <Link
-            to="/user/orders"
+            to="/cart"
             className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
-              isActive("/user/orders")
+              isActive("/cart")
+                ? "bg-gradient-to-r from-indigo-100 to-purple-100 text-indigo-700 border-l-4 border-indigo-600"
+                : "text-gray-600 hover:bg-indigo-50 hover:text-indigo-700"
+            }`}
+          >
+            🛒 <span className="ml-3">Cart</span>
+          </Link>
+
+          <Link
+            to="/orders"
+            className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
+              isActive("/orders")
                 ? "bg-gradient-to-r from-indigo-100 to-purple-100 text-indigo-700 border-l-4 border-indigo-600"
                 : "text-gray-600 hover:bg-indigo-50 hover:text-indigo-700"
             }`}
@@ -83,9 +94,9 @@ export default function Home() {
           </Link>
 
           <Link
-            to="/user/history"
+            to="/history"
             className={`flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
-              isActive("/user/history")
+              isActive("/history")
                 ? "bg-gradient-to-r from-indigo-100 to-purple-100 text-indigo-700 border-l-4 border-indigo-600"
                 : "text-gray-600 hover:bg-indigo-50 hover:text-indigo-700"
             }`}
@@ -111,9 +122,9 @@ export default function Home() {
         <header className="bg-white shadow-sm">
           <div className="flex items-center justify-between h-16 px-6">
             <h1 className="text-xl font-semibold text-gray-800">
-              {isActive("/user/products") && "Browse Products"}
-              {isActive("/user/orders") && "My Orders"}
-              {isActive("/user/history") && "Order History"}
+              {isActive("/products") && "Browse Products"}
+              {isActive("/orders") && "My Orders"}
+              {isActive("/history") && "Order History"}
             </h1>
           </div>
         </header>

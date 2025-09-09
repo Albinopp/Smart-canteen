@@ -48,6 +48,7 @@ func Login(c *gin.Context) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"username": user.Username,
 		"role":     user.Role,
+		"user_id":  user.ID.Hex(),
 		"exp":      time.Now().Add(24 * time.Hour).Unix(), // 1 day expiry
 	})
 
@@ -61,5 +62,6 @@ func Login(c *gin.Context) {
 		"message": "Login successful",
 		"token":   tokenString,
 		"role":    user.Role,
+		"user_id": user.ID.Hex(),
 	})
 }

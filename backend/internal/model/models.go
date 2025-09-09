@@ -1,6 +1,9 @@
 package model
 
+import "go.mongodb.org/mongo-driver/bson/primitive"
+
 type User struct {
+	ID       primitive.ObjectID `json:"id" bson:"_id"`
 	Username string `json:"username" bson:"username"`
 	Email    string `json:"email" bson:"email"`
 	Password string `json:"password" bson:"password"`
@@ -19,4 +22,8 @@ type Product struct {
 	Price       float64 `bson:"price" json:"price" binding:"required"`
 	Quantity    int     `bson:"quantity" json:"quantity" binding:"required"`
 	CreatedBy   string  `bson:"createdBy" json:"createdBy"`
+}
+
+type AddtoCart struct {
+	Quantity    int     `json:"quantity"`
 }

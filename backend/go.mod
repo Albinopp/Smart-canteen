@@ -2,7 +2,10 @@ module backend
 
 go 1.25.0
 
-require go.mongodb.org/mongo-driver v1.17.4
+require (
+	github.com/golang-jwt/jwt/v5 v5.3.0
+	go.mongodb.org/mongo-driver v1.17.4
+)
 
 require (
 	github.com/bytedance/sonic v1.13.3 // indirect
@@ -14,7 +17,6 @@ require (
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.26.0 // indirect
 	github.com/goccy/go-json v0.10.5 // indirect
-	github.com/golang-jwt/jwt/v5 v5.3.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.10 // indirect
 	github.com/kr/text v0.2.0 // indirect
