@@ -11,15 +11,13 @@ import (
 )
 
 func main() {
-	// Connect to MongoDB
 	database.Connect()
 
-	// Setup Gin router
 	r := gin.Default()
 
 	// Enable CORS
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:5173"}, // React frontend
+		AllowOrigins:     []string{"http://localhost:5173"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
@@ -39,6 +37,10 @@ func main() {
 
 	r.POST("/addtocart/:id/:user_id", middlewares.AuthMiddleware(), controllers.AddtoCart)
 	r.GET("/user/cart", middlewares.AuthMiddleware(), controllers.GetCart)
+
+	r.POST("/user/order", middlewares.AuthMiddleware(), controllers.CreateOrder)
+	r.POST("/user/payment/verify", middlewares.AuthMiddleware(), controllers.VerifyPayment)
+	r.GET("/user/order/history", middlewares.AuthMiddleware(), controllers.GetOrder)
 
 	r.Run(":8080")
 }

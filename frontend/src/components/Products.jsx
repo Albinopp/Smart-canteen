@@ -13,7 +13,6 @@ export default function Products() {
   const [editProduct, setEditProduct] = useState(null);
   const token = localStorage.getItem("token");
 
-  // ✅ Fetch products from backend
   const fetchProducts = async () => {
     try {
       const res = await fetch("http://localhost:8080/products", {

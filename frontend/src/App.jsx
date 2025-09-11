@@ -7,9 +7,10 @@ import Bookings from "./components/Bookings";
 import Transactions from "./components/Transactions";
 import Home from "./components/Home";
 import UserProducts from "./components/UserProducts";
-import Orders from "./components/UserOrders";
+import Orders from "./components/OrderHistory";
 import History from "./components/UserHistory";
 import UserCart from "./components/UserCart";
+import OrderHistory from "./components/OrderHistory";
 
 function App() {
   return (
@@ -28,7 +29,7 @@ function App() {
           <Route index element={<UserProducts />} /> 
           <Route path="products" element={<UserProducts />} />
           <Route path="cart" element={<UserCart />} />
-          <Route path="orders" element={<Orders />} />
+          <Route path="orders" element={<OrderHistory />} />
           <Route path="history" element={<History />} />
         </Route>
         {/* Admin Routes with nested pages */}

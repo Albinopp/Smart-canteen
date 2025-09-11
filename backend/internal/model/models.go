@@ -27,3 +27,25 @@ type Product struct {
 type AddtoCart struct {
 	Quantity    int     `json:"quantity"`
 }
+
+type OrderItem struct {
+	ProductID   string  `bson:"productId" json:"productId" binding:"required"`
+	Name        string  `bson:"name" json:"name"`                   
+	Price       float64 `bson:"price" json:"price" binding:"required"`
+	Quantity    int     `bson:"quantity" json:"quantity" binding:"required"`
+	Total       float64 `bson:"total" json:"total"`                
+}
+
+
+type Order struct {
+	ID           string       `bson:"_id,omitempty" json:"id,omitempty"`
+	CustomerID   string       `bson:"customerId" json:"customerId" binding:"required"`
+	CustomerName string       `bson:"customerName" json:"customerName"`
+	CustomerEmail string      `bson:"customerEmail" json:"customerEmail"`
+	Items        []OrderItem  `bson:"items" json:"items" binding:"required"`
+	Total        float64      `bson:"total" json:"total"`                
+	Status       string       `bson:"status" json:"status"`              
+	PaymentMethod string      `bson:"paymentMethod" json:"paymentMethod"`
+	IsPaid       bool         `bson:"isPaid" json:"isPaid"`
+	CreatedAt    int64        `bson:"createdAt" json:"createdAt"`       
+}

@@ -31,7 +31,7 @@ export default function UserProducts() {
 
   const handleOpenModal = (product) => {
     setSelectedProduct(product);
-    setQuantity(1); // default quantity
+    setQuantity(1);
     setModalOpen(true);
   };
 
