@@ -4,11 +4,16 @@ import { Link, Outlet, useNavigate, useLocation } from "react-router-dom";
 export default function AdminPanel() {
   const navigate = useNavigate();
   const location = useLocation();
+  const [name, setName] = React.useState("");
 
   useEffect(() => {
       const token = localStorage.getItem("token");
       const role = localStorage.getItem("role");
-  
+      const name = localStorage.getItem("user_name");
+      if (name) {
+        setName(name);
+      }
+
       if (!token) {
         navigate("/login");
       }
@@ -23,7 +28,6 @@ export default function AdminPanel() {
     navigate("/");
   };
 
-  // Check which menu item is active
   const isActive = (path) => location.pathname === path;
 
   return (
@@ -50,7 +54,7 @@ export default function AdminPanel() {
             </svg>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 truncate">Admin User</p>
+            <p className="text-sm font-medium text-gray-900 truncate">{name}</p>
             <p className="text-xs text-gray-500 truncate">Administrator</p>
           </div>
         </div>

@@ -4,10 +4,17 @@ import { Link, Outlet, useNavigate, useLocation } from "react-router-dom";
 export default function Home() {
   const navigate = useNavigate();
   const location = useLocation();
+  const [userName, setUserName] = React.useState("");
+
 
   useEffect(() => {
     const token = localStorage.getItem("token");
     const role = localStorage.getItem("role");
+    const user_name = localStorage.getItem("user_name");
+
+    if (user_name) {
+      setUserName(user_name);
+    }
 
     if (!token) {
       navigate("/login");
@@ -53,7 +60,7 @@ export default function Home() {
             </svg>
           </div>
           <div>
-            <p className="text-sm font-medium text-gray-900">Hello, User</p>
+            <p className="text-sm font-medium text-gray-900">Hello, {userName}</p>
             <p className="text-xs text-gray-500">Welcome Back</p>
           </div>
         </div>

@@ -62,6 +62,7 @@ func Login(c *gin.Context) {
 		"message": "Login successful",
 		"token":   tokenString,
 		"role":    user.Role,
+		"username":user.Username,
 		"user_id": user.ID.Hex(),
 	})
 }

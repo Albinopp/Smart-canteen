@@ -43,7 +43,6 @@ func AddtoCart(c *gin.Context) {
     ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
     defer cancel()
 
-    // ✅ Step 1: Check product stock
     productColl := mongodb.GetCollection("smartcanteen", "products")
     var product bson.M
     if err := productColl.FindOne(ctx, bson.M{"_id": pid}).Decode(&product); err != nil {
@@ -51,7 +50,7 @@ func AddtoCart(c *gin.Context) {
         return
     }
 
-    availableQty, ok := product["quantity"].(int32) // adjust depending on your schema
+    availableQty, ok := product["quantity"].(int32) 
     if !ok {
         c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid product quantity"})
         return
@@ -62,7 +61,6 @@ func AddtoCart(c *gin.Context) {
         return
     }
 
-    // ✅ Step 2: Check if product already exists in user's cart
     cartColl := mongodb.GetCollection("smartcanteen", "addtocart")
     var existingCart bson.M
     err = cartColl.FindOne(ctx, bson.M{
@@ -71,7 +69,6 @@ func AddtoCart(c *gin.Context) {
     }).Decode(&existingCart)
 
     if err == nil {
-        // Already exists → update quantity
         newQty := existingCart["quantity"].(int32) + int32(input.Quantity)
         if int(newQty) > int(availableQty) {
             c.JSON(http.StatusBadRequest, gin.H{"error": "Total quantity exceeds available stock"})
@@ -94,7 +91,6 @@ func AddtoCart(c *gin.Context) {
         return
     }
 
-    // ✅ Step 3: Insert new product into cart
     cart := bson.M{
         "product_id": pid,
         "user_id":    oid,
@@ -139,7 +135,6 @@ func GetCart(c *gin.Context) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	// Fetch all cart items for user
 	cursor, err := cartColl.Find(ctx, bson.M{"user_id": oid})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch cart"})
@@ -162,11 +157,11 @@ func GetCart(c *gin.Context) {
 		var product bson.M
 		err := productColl.FindOne(ctx, bson.M{"_id": pid}).Decode(&product)
 		if err != nil {
-			continue // skip missing products
+			continue 
 		}
 
-		quantity := int(item["quantity"].(int32)) // adjust if your type is int64
-		price := product["price"].(float64)       // adjust if price is int
+		quantity := int(item["quantity"].(int32)) 
+		price := product["price"].(float64)       
 		total := float64(quantity) * price
 
 		grandTotal += total
@@ -174,8 +169,10 @@ func GetCart(c *gin.Context) {
 		response = append(response, gin.H{
 			"name":        product["name"],
 			"description": product["description"],
+            "productId":pid,
 			"price":       price,
 			"quantity":    quantity,
+            "totalQuantity":product["quantity"],
 			"total":       total,
 		})
 	}
@@ -184,4 +181,114 @@ func GetCart(c *gin.Context) {
 		"items":      response,
 		"grandTotal": grandTotal,
 	})
+}
+
+func UpdateCart(c *gin.Context) {
+    user_id := c.Param("user_id")
+    product_id := c.Param("id")
+
+    var input struct {
+        Quantity int `json:"quantity" binding:"required"`
+    }
+    if err := c.ShouldBindJSON(&input); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
+        return
+    }
+
+    if input.Quantity < 1 {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Quantity must be at least 1"})
+        return
+    }
+
+    role, _ := c.Get("role")
+    if role != "user" {
+        c.JSON(http.StatusForbidden, gin.H{"error": "Only user can update cart"})
+        return
+    }
+
+    oid, err := primitive.ObjectIDFromHex(user_id)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+        return
+    }
+    pid, err := primitive.ObjectIDFromHex(product_id)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid product ID"})
+        return
+    }
+
+    ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+    defer cancel()
+
+    productColl := mongodb.GetCollection("smartcanteen", "products")
+    var product bson.M
+    if err := productColl.FindOne(ctx, bson.M{"_id": pid}).Decode(&product); err != nil {
+        c.JSON(http.StatusNotFound, gin.H{"error": "Product not found"})
+        return
+    }
+
+    availableQty, ok := product["quantity"].(int32)
+    if !ok {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid product quantity"})
+        return
+    }
+
+    if input.Quantity > int(availableQty) {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Quantity exceeds available stock"})
+        return
+    }
+
+    cartColl := mongodb.GetCollection("smartcanteen", "addtocart")
+    result, err := cartColl.UpdateOne(
+        ctx,
+        bson.M{"user_id": oid, "product_id": pid},
+        bson.M{"$set": bson.M{"quantity": input.Quantity}},
+    )
+
+    if err != nil || result.MatchedCount == 0 {
+        c.JSON(http.StatusNotFound, gin.H{"error": "Cart item not found"})
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{
+        "message": "Cart updated successfully",
+    })
+}
+
+func RemoveCart(c *gin.Context) {
+    user_id := c.Param("user_id")
+    product_id := c.Param("id")
+
+    role, _ := c.Get("role")
+    if role != "user" {
+        c.JSON(http.StatusForbidden, gin.H{"error": "Only user can remove cart items"})
+        return
+    }
+
+    oid, err := primitive.ObjectIDFromHex(user_id)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid user ID"})
+        return
+    }
+    pid, err := primitive.ObjectIDFromHex(product_id)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid product ID"})
+        return
+    }
+
+    ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+    defer cancel()
+
+    cartColl := mongodb.GetCollection("smartcanteen", "addtocart")
+    result, err := cartColl.DeleteOne(ctx, bson.M{"user_id": oid, "product_id": pid})
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to remove from cart"})
+        return
+    }
+    if result.DeletedCount == 0 {
+        c.JSON(http.StatusNotFound, gin.H{"error": "Cart item not found"})
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{"message": "Product removed from cart"})
 }

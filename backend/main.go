@@ -37,6 +37,8 @@ func main() {
 
 	r.POST("/addtocart/:id/:user_id", middlewares.AuthMiddleware(), controllers.AddtoCart)
 	r.GET("/user/cart", middlewares.AuthMiddleware(), controllers.GetCart)
+	r.PATCH("/user/cart/:user_id/:id", middlewares.AuthMiddleware(), controllers.UpdateCart)
+	r.DELETE("/user/cart/:user_id/:id", middlewares.AuthMiddleware(), controllers.RemoveCart)
 
 	r.POST("/user/order", middlewares.AuthMiddleware(), controllers.CreateOrder)
 	r.POST("/user/payment/verify", middlewares.AuthMiddleware(), controllers.VerifyPayment)

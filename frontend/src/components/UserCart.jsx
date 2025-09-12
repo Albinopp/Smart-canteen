@@ -5,6 +5,7 @@ export default function UserCart() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const token = localStorage.getItem("token");
+  const userId = localStorage.getItem("user_id"); 
 
   const fetchCart = async () => {
     try {
@@ -35,26 +36,73 @@ export default function UserCart() {
     }
   };
 
+  const updateQuantity = async (productId, quantity,totalQuantity) => {
+    if (quantity < 1) return removeItem(productId);
+    if (quantity >totalQuantity){
+      alert(`Quantity cannot exceed available stock (${totalQuantity})`);
+      return;
+    }
+
+    try {
+      const res = await fetch(
+        `http://localhost:8080/user/cart/${userId}/${productId}`,
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ quantity }),
+        }
+      );
+
+      if (!res.ok) {
+        alert(data.error || "Failed to update quantity");
+        throw new Error(data.error || "Failed to update quantity");
+      }
+      fetchCart();
+    } catch (err) {
+      if (!err.message) alert("Something went wrong while updating quantity");
+    }
+  };
+
+  const removeItem = async (productId) => {
+    try {
+      const res = await fetch(
+        `http://localhost:8080/user/cart/${userId}/${productId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!res.ok) throw new Error("Failed to remove item");
+      fetchCart();
+    } catch (err) {
+      console.error("Error removing item:", err);
+    }
+  };
+
   const loadRazorpayScript = (src) => {
     return new Promise((resolve) => {
       const script = document.createElement("script");
       script.src = src;
-      script.onload = () => {
-        resolve(true);
-      };
-      script.onerror = () => {
-        resolve(false);
-      };
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
       document.body.appendChild(script);
     });
   };
-
 
   const handleBuyNow = async () => {
     try {
       setLoading(true);
 
-      const resLoaded = await loadRazorpayScript("https://checkout.razorpay.com/v1/checkout.js");
+      const resLoaded = await loadRazorpayScript(
+        "https://checkout.razorpay.com/v1/checkout.js"
+      );
       if (!resLoaded) {
         alert("Failed to load Razorpay SDK. Check your internet.");
         return;
@@ -72,7 +120,6 @@ export default function UserCart() {
       if (!res.ok) throw new Error("Failed to create order");
 
       const data = await res.json();
-      console.log("Order Response:", data);
 
       const options = {
         key: data.key,
@@ -81,33 +128,27 @@ export default function UserCart() {
         name: "Smart Canteen",
         description: "Order Payment",
         order_id: data.razorpayOrderID,
-       handler: function (response) {
-        alert("Payment successful! Payment ID: " + response.razorpay_payment_id);
+        handler: function (response) {
+          alert("Payment successful! Payment ID: " + response.razorpay_payment_id);
 
-        const verifyBody = {
-          ...response,         
-          orderID: data.orderID,
-        };
+          const verifyBody = { ...response, orderID: data.orderID };
 
-        fetch("http://localhost:8080/user/payment/verify", {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(verifyBody),
-        })
-          .then((res) => res.json())
-          .then((verifyRes) => {
-            fetchCart(); 
-            console.log("Payment verification:", verifyRes);
+          fetch("http://localhost:8080/user/payment/verify", {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(verifyBody),
           })
-          .catch((err) => console.error("Verification error:", err));
-      },
-
-        theme: {
-          color: "#6366f1",
+            .then((res) => res.json())
+            .then((verifyRes) => {
+              fetchCart();
+              console.log("Payment verification:", verifyRes);
+            })
+            .catch((err) => console.error("Verification error:", err));
         },
+        theme: { color: "#6366f1" },
       };
 
       const rzp = new window.Razorpay(options);
@@ -119,7 +160,6 @@ export default function UserCart() {
       setLoading(false);
     }
   };
-
 
   useEffect(() => {
     fetchCart();
@@ -147,6 +187,27 @@ export default function UserCart() {
                   ₹ {item.price} × {item.quantity}
                 </p>
               </div>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => updateQuantity(item.productId, item.quantity - 1)}
+                  className="px-2 py-1 bg-gray-300 rounded hover:bg-gray-400"
+                >
+                  -
+                </button>
+                <span className="px-3">{item.quantity}</span>
+                <button
+                  onClick={() => updateQuantity(item.productId, item.quantity + 1,item.totalQuantity)}
+                  className="px-2 py-1 bg-gray-300 rounded hover:bg-gray-400"
+                >
+                  +
+                </button>
+                <button
+                  onClick={() => removeItem(item.productId)}
+                  className="ml-4 px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+                >
+                  Remove
+                </button>
+              </div>
               <p className="text-lg font-bold text-gray-800">
                 ₹ {item.price * item.quantity}
               </p>
@@ -157,7 +218,6 @@ export default function UserCart() {
             <p className="text-xl font-bold text-indigo-700">₹ {total}</p>
           </div>
 
-          {/* ✅ Buy Now button */}
           <div className="mt-6 text-right">
             <button
               onClick={handleBuyNow}
