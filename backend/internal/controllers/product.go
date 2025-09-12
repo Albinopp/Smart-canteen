@@ -59,15 +59,23 @@ func AddProduct(c *gin.Context) {
 func GetProducts(c *gin.Context) {
 	role, _ := c.Get("role")
 	if role != "admin" && role != "user" {
-		c.JSON(http.StatusForbidden, gin.H{"error": "No persmission to see food products"})
+		c.JSON(http.StatusForbidden, gin.H{"error": "No permission to see food products"})
 		return
 	}
+
 	collection := mongodb.GetCollection("smartcanteen", "products")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	cursor, err := collection.Find(ctx, bson.M{"quantity": bson.M{"$gt": 0}})
+	var filter bson.M
+	if role == "user" {
+		filter = bson.M{"quantity": bson.M{"$gt": 0}}
+	} else {
+		filter = bson.M{}
+	}
+
+	cursor, err := collection.Find(ctx, filter)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch products"})
 		return

@@ -18,7 +18,7 @@ func main() {
 	// Enable CORS
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost:5173"},
-		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowMethods:     []string{"GET", "POST", "PUT","PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
@@ -41,6 +41,9 @@ func main() {
 	r.POST("/user/order", middlewares.AuthMiddleware(), controllers.CreateOrder)
 	r.POST("/user/payment/verify", middlewares.AuthMiddleware(), controllers.VerifyPayment)
 	r.GET("/user/order/history", middlewares.AuthMiddleware(), controllers.GetOrder)
+
+	r.GET("/admin/orders", middlewares.AuthMiddleware(), controllers.GetAllOrders)
+	r.PATCH("/admin/order/:id/deliver", middlewares.AuthMiddleware(), controllers.MarkOrderDelivered)
 
 	r.Run(":8080")
 }

@@ -46,13 +46,13 @@ export default function OrderHistory() {
             className="p-4 border rounded-lg shadow-md bg-gradient-to-r from-yellow-50 to-orange-50"
           >
             <h3 className="text-lg font-bold text-gray-800 mb-2">
-              Order ID: {order._id}
+              Order ID: {order.id}
             </h3>
             <p className="text-sm text-gray-600">
               Status:{" "}
               <span
                 className={
-                  order.status === "Paid"
+                  order.status.toLowerCase() === "paid"
                     ? "text-green-600 font-semibold"
                     : "text-red-600 font-semibold"
                 }
@@ -81,21 +81,10 @@ export default function OrderHistory() {
               ))}
             </div>
 
-            {/* ✅ If productDetails exists */}
-            {order.productDetails && order.productDetails.length > 0 && (
-              <div className="mt-3">
-                <p className="text-sm font-semibold text-gray-700">
-                  Product Details:
-                </p>
-                <ul className="list-disc ml-5 text-sm text-gray-600">
-                  {order.productDetails.map((p, pid) => (
-                    <li key={pid}>
-                      {p.name} ({p.description}) — Stock Left: {p.quantity}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
+            <p className="text-xs text-gray-400 mt-2">
+              Ordered on:{" "}
+              {new Date(order.createdAt * 1000).toLocaleString("en-IN")}
+            </p>
           </div>
         ))}
       </div>

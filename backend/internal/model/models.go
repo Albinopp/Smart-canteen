@@ -47,5 +47,6 @@ type Order struct {
 	Status       string       `bson:"status" json:"status"`              
 	PaymentMethod string      `bson:"paymentMethod" json:"paymentMethod"`
 	IsPaid       bool         `bson:"isPaid" json:"isPaid"`
-	CreatedAt    int64        `bson:"createdAt" json:"createdAt"`       
+	CreatedAt    int64        `bson:"createdAt" json:"createdAt"`   
+	Delivered bool `bson:"delivered" json:"delivered"`    
 }
