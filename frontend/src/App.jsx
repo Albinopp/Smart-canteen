@@ -4,11 +4,12 @@ import Register from "./components/Register";
 import Admin from "./components/Admin";
 import Products from "./components/Products";
 import Bookings from "./components/Bookings";
-import Transactions from "./components/Transactions";
 import Home from "./components/Home";
 import UserProducts from "./components/UserProducts";
 import UserCart from "./components/UserCart";
 import OrderHistory from "./components/OrderHistory";
+import UserComplaints from "./components/UserComplaints";
+import Complaints from "./components/Complaints";
 
 function App() {
   return (
@@ -28,6 +29,7 @@ function App() {
           <Route path="products" element={<UserProducts />} />
           <Route path="cart" element={<UserCart />} />
           <Route path="orders" element={<OrderHistory />} />
+          <Route path="complaints" element={<UserComplaints/>} />
         </Route>
         {/* Admin Routes with nested pages */}
         <Route
@@ -36,7 +38,7 @@ function App() {
           <Route index element={<Products />} /> 
           <Route path="products" element={<Products />} />
           <Route path="bookings" element={<Bookings />} />
-          <Route path="transactions" element={<Transactions/>} />
+          <Route path="complaints" element={<Complaints/>} />
         </Route>
       </Routes>
     </BrowserRouter>

@@ -12,6 +12,8 @@ export default function Products() {
   });
   const [editProduct, setEditProduct] = useState(null);
   const token = localStorage.getItem("token");
+  const [openFeedback, setOpenFeedback] = useState(null);
+
 
   const fetchProducts = async () => {
     try {
@@ -45,7 +47,6 @@ export default function Products() {
     }
   };
 
-  // ✅ Add product
   const handleAddProduct = async () => {
     if (!newProduct.name || !newProduct.price || !newProduct.quantity) {
       alert("Please fill required fields");
@@ -79,7 +80,6 @@ export default function Products() {
     }
   };
 
-  // ✅ Delete product
   const handleDelete = async (id) => {
     try {
       const res = await fetch(`http://localhost:8080/products/${id}`, {
@@ -98,7 +98,6 @@ export default function Products() {
     }
   };
 
-  // ✅ Increase quantity
   const handleIncreaseQty = async (product) => {
     try {
       const res = await fetch(`http://localhost:8080/products/${product.id}`, {
@@ -122,13 +121,11 @@ export default function Products() {
     }
   };
 
-  // ✅ Open Edit Modal
   const handleEdit = (product) => {
     setEditProduct(product);
     setIsEditModalOpen(true);
   };
 
-  // ✅ Save Edited Product
   const handleUpdateProduct = async () => {
     if (!editProduct.name || !editProduct.price || !editProduct.quantity) {
       alert("Please fill required fields");
@@ -164,6 +161,11 @@ export default function Products() {
     }
   };
 
+  const toggleFeedback = (id) => {
+    setOpenFeedback(openFeedback === id ? null : id);
+  };
+
+
   return (
     <div>
       {/* Header */}
@@ -189,34 +191,64 @@ export default function Products() {
             key={product.id}
             className="flex justify-between items-center p-4 bg-gradient-to-r from-indigo-100 to-purple-100 rounded-xl shadow-md"
           >
-            <div>
-              <h3 className="text-lg font-semibold text-gray-800">
-                {product.name}
-              </h3>
-              <p className="text-sm text-gray-600">{product.description}</p>
-              <p className="text-indigo-700 font-bold">
-                ₹ {product.price} | Qty: {product.quantity}
-              </p>
-            </div>
-            <div className="flex gap-2">
+            <div key={product.id} className="flex flex-col p-4 bg-gradient-to-r from-indigo-100 to-purple-100 rounded-xl shadow-md">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-800">{product.name}</h3>
+                  <p className="text-sm text-gray-600">{product.description}</p>
+                  <p className="text-indigo-700 font-bold">
+                    ₹ {product.price} | Qty: {product.quantity}
+                  </p>
+                </div>
+
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleIncreaseQty(product)}
+                    className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                  >
+                    + Qty
+                  </button>
+
+                  <button
+                    onClick={() => handleEdit(product)}
+                    className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600"
+                  >
+                    Edit
+                  </button>
+
+                  <button
+                    onClick={() => handleDelete(product.id)}
+                    className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+
               <button
-                onClick={() => handleIncreaseQty(product)}
-                className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                onClick={() => toggleFeedback(product.id)}
+                className="mt-3 px-3 py-1 bg-gray-300 rounded-lg text-sm hover:bg-gray-400"
               >
-                + Qty
+                {openFeedback === product.id ? "Hide Feedback ▲" : "Show Feedback ▼"}
               </button>
-              <button
-                onClick={() => handleEdit(product)}
-                className="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600"
-              >
-                Edit
-              </button>
-              <button
-                onClick={() => handleDelete(product.id)}
-                className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600"
-              >
-                Delete
-              </button>
+
+              {openFeedback === product.id && (
+                <div className="mt-2 bg-white/60 p-3 rounded-lg shadow-inner">
+                  <h4 className="font-semibold text-gray-700 text-sm">Feedback:</h4>
+
+                  {product.feedback && product.feedback.length > 0 ? (
+                    product.feedback.map((fb) => (
+                      <div key={fb.id} className="mt-2 border-b pb-1">
+                        <p className="text-sm">
+                          ⭐ {fb.rating} — {fb.comment}
+                        </p>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-sm text-gray-600">No feedback available.</p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         ))

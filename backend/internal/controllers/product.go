@@ -20,7 +20,6 @@ func AddProduct(c *gin.Context) {
 		return
 	}
 
-	// Attach creator info (from JWT context)
 	createdBy, _ := c.Get("username")
 	input.CreatedBy, _ = createdBy.(string)
 	role, _ := c.Get("role")
@@ -29,7 +28,6 @@ func AddProduct(c *gin.Context) {
 		return
 	}
 
-	// Insert into MongoDB
 	collection := mongodb.GetCollection("smartcanteen", "products")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -88,6 +86,23 @@ func GetProducts(c *gin.Context) {
 		return
 	}
 
+	for i := range products {
+		productObjID, err := primitive.ObjectIDFromHex(products[i].ID)
+		if err != nil {
+			products[i].Feedback = []model.Feedback{}
+			continue
+		}
+
+		feedback, err := GetFeedbackByProductID(ctx, productObjID)
+		if err != nil {
+			products[i].Feedback = []model.Feedback{}
+			continue
+		}
+
+		products[i].Feedback = feedback
+	}
+
+	slog.Info("product",products)
 	c.JSON(http.StatusOK, products)
 }
 
@@ -133,7 +148,6 @@ func EditProduct(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Product updated successfully"})
 }
 
-// ✅ Delete Product
 func DeleteProduct(c *gin.Context) {
 	id := c.Param("id")
 

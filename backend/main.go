@@ -2,12 +2,13 @@ package main
 
 import (
 	"backend/internal/controllers"
-	"backend/internal/middleware"
+	middlewares "backend/internal/middleware"
 	database "backend/internal/mogodb"
+
+	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"time"
 )
 
 func main() {
@@ -18,7 +19,7 @@ func main() {
 	// Enable CORS
 	r.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost:5173"},
-		AllowMethods:     []string{"GET", "POST", "PUT","PATCH", "DELETE", "OPTIONS"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
@@ -44,8 +45,16 @@ func main() {
 	r.POST("/user/payment/verify", middlewares.AuthMiddleware(), controllers.VerifyPayment)
 	r.GET("/user/order/history", middlewares.AuthMiddleware(), controllers.GetOrder)
 
+	r.POST("/user/product/feedback", middlewares.AuthMiddleware(), controllers.SubmitFeedback)
+	r.PATCH("/user/product/feedback/edit", middlewares.AuthMiddleware(), controllers.SubmitOrEditFeedback)
+
 	r.GET("/admin/orders", middlewares.AuthMiddleware(), controllers.GetAllOrders)
 	r.PATCH("/admin/order/:id/deliver", middlewares.AuthMiddleware(), controllers.MarkOrderDelivered)
+
+	r.POST("/user/complaint", middlewares.AuthMiddleware(), controllers.RaiseComplaint)
+	r.GET("/user/complaint", middlewares.AuthMiddleware(), controllers.GetComplaints)
+	r.GET("/admin/complaint", middlewares.AuthMiddleware(), controllers.GetAllComplaints)
+	r.PATCH("/complaint/edit/:id", middlewares.AuthMiddleware(), controllers.EditComplaint)
 
 	r.Run(":8080")
 }

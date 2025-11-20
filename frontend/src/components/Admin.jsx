@@ -135,7 +135,7 @@ export default function AdminPanel() {
             }`}></div>
           </Link>
           
-          <Link
+          {/* <Link
             to="/admin/transactions"
             className={`group flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-300 border border-transparent relative overflow-hidden ${
               isActive("/admin/transactions")
@@ -148,21 +148,20 @@ export default function AdminPanel() {
             <div className={`absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-white to-gray-400 transition-transform duration-300 ${
               isActive("/admin/transactions") ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'
             }`}></div>
-          </Link>
+          </Link> */}
 
-          {/* Additional Admin Links */}
           <Link
-            to="/admin/analytics"
+            to="/admin/complaints"
             className={`group flex items-center px-4 py-3 text-sm font-medium rounded-lg transition-all duration-300 border border-transparent relative overflow-hidden ${
-              isActive("/admin/analytics")
+              isActive("/admin/complaints")
                 ? "bg-gradient-to-r from-gray-700 to-gray-800 text-white border-l-4 border-white shadow-lg"
                 : "text-gray-300 hover:bg-gray-800/50 hover:text-white hover:border-gray-600"
             }`}
           >
             <span className="text-lg mr-3 group-hover:scale-110 transition-transform duration-200">📊</span>
-            <span>Business Insights</span>
+            <span>Customer Complaints</span>
             <div className={`absolute bottom-0 left-0 w-full h-0.5 bg-gradient-to-r from-white to-gray-400 transition-transform duration-300 ${
-              isActive("/admin/analytics") ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'
+              isActive("/admin/complaints") ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'
             }`}></div>
           </Link>
         </nav>

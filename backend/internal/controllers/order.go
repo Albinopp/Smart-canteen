@@ -149,7 +149,6 @@ func CreateOrder(c *gin.Context) {
 	})
 }
 
-
 func GetOrder(c *gin.Context) {
 	userID, exists := c.Get("user_id")
 	if !exists {
@@ -165,11 +164,63 @@ func GetOrder(c *gin.Context) {
 
 	orderColl := mongodb.GetCollection("smartcanteen", "orders")
 	productColl := mongodb.GetCollection("smartcanteen", "products")
+	feedbackColl := mongodb.GetCollection("smartcanteen", "feedbacks")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	cursor, err := orderColl.Find(ctx, bson.M{"customerId": uidStr})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch orders"})
+		return
+	}
+	defer cursor.Close(ctx)
+
+	var orders []model.Order
+	if err := cursor.All(ctx, &orders); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to parse orders"})
+		return
+	}
+
+	for i, order := range orders {
+		for j, item := range order.Items {
+			var product model.Product
+			err := productColl.FindOne(ctx, bson.M{"_id": item.ProductID}).Decode(&product)
+			if err == nil {
+				orders[i].Items[j].Name = product.Name
+				orders[i].Items[j].Price = product.Price
+				orders[i].Items[j].Total = product.Price * float64(item.Quantity)
+			}
+			prodID, err := primitive.ObjectIDFromHex(item.ProductID)
+			feedbackCursor, err := feedbackColl.Find(ctx, bson.M{"productId": prodID})
+			if err == nil {
+				var feedback []model.Feedback
+				if err := feedbackCursor.All(ctx, &feedback); err == nil {
+					orders[i].Items[j].Feedback = feedback
+				}
+			}
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"orders": orders,
+	})
+}
+
+func GetAllOrders(c *gin.Context) {
+	role, _ := c.Get("role")
+	if role != "admin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
+		return
+	}
+
+	orderColl := mongodb.GetCollection("smartcanteen", "orders")
+	productColl := mongodb.GetCollection("smartcanteen", "products")
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	cursor, err := orderColl.Find(ctx, bson.M{})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch orders"})
 		return
@@ -198,50 +249,6 @@ func GetOrder(c *gin.Context) {
 		"orders": orders,
 	})
 }
-
-func GetAllOrders(c *gin.Context) {
-	role, _ := c.Get("role")
-	if role != "admin" {
-		c.JSON(http.StatusForbidden, gin.H{"error": "Access denied"})
-		return
-	}
-
-	orderColl := mongodb.GetCollection("smartcanteen", "orders")
-	productColl := mongodb.GetCollection("smartcanteen", "products")
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	cursor, err := orderColl.Find(ctx, bson.M{}) 
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch orders"})
-		return
-	}
-	defer cursor.Close(ctx)
-
-	var orders []model.Order
-	if err := cursor.All(ctx, &orders); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to parse orders"})
-		return
-	}
-
-	for i, order := range orders {
-		for j, item := range order.Items {
-			var product model.Product
-			err := productColl.FindOne(ctx, bson.M{"_id": item.ProductID}).Decode(&product)
-			if err == nil {
-				orders[i].Items[j].Name = product.Name
-				orders[i].Items[j].Price = product.Price
-				orders[i].Items[j].Total = product.Price * float64(item.Quantity)
-			}
-		}
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"orders": orders, 
-	})
-}
-
 
 func MarkOrderDelivered(c *gin.Context) {
 	role, _ := c.Get("role")

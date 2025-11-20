@@ -11,7 +11,6 @@ import (
 
 var jwtSecret = []byte("supersecretkey")
 
-// AuthMiddleware verifies JWT token
 func AuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		authHeader := c.GetHeader("Authorization")
